@@ -4,10 +4,8 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 var logger = require('morgan');
-const passport = require("passport");
-const session = require('express-session');
-
-
+const cors = require('cors');
+require("dotenv").config();
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -19,13 +17,42 @@ var brand = require('./controller/brand');
 var categories = require('./controller/categories');
 var logins = require('./controller/login');
 var uploadImage = require('./controller/UploadImage');
+var jwt = require('./controller/middleware');
+var order = require('./controller/order');
+var customers = require('./controller/customer');
+var payment = require('./controller/vnpayment');
 
+
+
+
+const corsOptions = {
+  origin: process.env.REACT_URL,
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  Headers: 'X-Requested-With,content-type',
+  credentials: true, 
+};
 
 
 
 
 
 var app = express();
+// Sử dụng middleware cors
+// app.use(cors());
+app.use(cors(corsOptions));
+// app.use(function (req, res, next) {
+
+//   res.setHeader('Access-Control-Allow-Origin', process.env.REACT_URL);
+
+//   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE,HEAD');
+
+//   res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+
+//   res.setHeader('Access-Control-Allow-Credentials', true);
+
+
+//   next();
+// });
 
 // Sử dụng body-parser để xử lý dữ liệu từ yêu cầu POST
 app.use(bodyParser.json());
@@ -44,25 +71,6 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// Add headers before the routes are defined
-app.use(function (req, res, next) {
-
-  // Website you wish to allow to connect
-  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:4200');
-
-  // Request methods you wish to allow
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-
-  // Request headers you wish to allow
-  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
-
-  // Set to true if you need the website to include cookies in the requests sent
-  // to the API (e.g. in case you use sessions)
-  res.setHeader('Access-Control-Allow-Credentials', true);
-
-  // Pass to next layer of middleware
-  next();
-});
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
@@ -73,15 +81,18 @@ app.use('/news', news);
 app.use('/brand', brand);
 app.use('/categories', categories);
 app.use('/login', logins);
-
+app.use('/middleware', jwt);
+app.use('/order', order);
+app.use('/customer', customers);
+app.use('/vnpayment', payment);
 app.use('/image', uploadImage);
 
 
-
-
-
-
-
+app.use(function (err, req, res, next) {
+  if (err.name === 'UnauthorizedError') {
+    res.status(401).send('Invalid token');
+  }
+});
 
 
 

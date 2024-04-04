@@ -1,8 +1,10 @@
 var express = require('express');
 var router = express.Router();
 var connection = require('./dataconnect');
+const verifyToken = require('./middleware');
 
-router.get('/getall', function(req, res, next) {
+
+router.get('/getall',verifyToken, function(req, res, next) {
     var sql = "SELECT * FROM employees";
     connection.query(sql, function (err, results){
         if(err) throw err;

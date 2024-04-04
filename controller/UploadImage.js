@@ -30,23 +30,7 @@ router.get('/getproductimage/:filename', (req, res) => {
   const imagePath = path.join(__dirname, '../uploads/products', fileName);
   res.sendFile(imagePath);
 });
-// getall ảnh
-// router.get('/getallimages', function(req, res) {
-//   const imageDirectory = path.join(__dirname, '../uploads/products');
-  
-//   fs.readdir(imageDirectory, (err, files) => {
-//       if (err) {
-//           console.error("Lỗi khi đọc thư mục ảnh:", err);
-//           return res.status(500).json({ error: "Lỗi máy chủ" });
-//       }
-//       const imageList = files.map(file => {
-//           const imageUrl = `/image/getproductimage/${file}`;
-//           return { filename: file, url: imageUrl };
-//       });
 
-//       res.json(imageList);
-//   });
-// });
 router.get('/getallimagesinfo', function(req, res) {
   const imageDirectory = path.join(__dirname, '../uploads/products');
 

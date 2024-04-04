@@ -7,7 +7,7 @@ const path = require('path');
 // Thiết lập storage cho multer 
 
 const storage = multer.diskStorage({
-    destination: './uploads/products/',
+    destination: './uploads/brand/',
     filename: function (req, file, cb) {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         cb(null, 'brand_image-' + uniqueSuffix + path.extname(file.originalname));
@@ -80,7 +80,7 @@ router.post('/addbrand', upload.single('brand_image'), (req, res) => {
 // Lấy ảnh khi được uploads
 router.get('/getproductimage/:filename', (req, res) => {
     const fileName = req.params.filename;
-    const imagePath = path.join(__dirname, '../uploads/products', fileName);
+    const imagePath = path.join(__dirname, '../uploads/brand', fileName);
     res.sendFile(imagePath);
   });
 // UPDATE

@@ -4,15 +4,21 @@ var connection = require('./dataconnect');
 // const pageController = require('./pageController');
 const multer = require('multer');
 const path = require('path');
-const { v4: uuidv4 } = require('uuid');
+// const { v4: uuidv4 } = require('uuid');
+const shortid = require('shortid');
+const fs = require('fs').promises;
 
 // Thiết lập storage cho multer 
+
 
 const storage = multer.diskStorage({
     destination: './uploads/products/',
     filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, 'product_image-' + uniqueSuffix + path.extname(file.originalname));
+        const uniqueId = shortid.generate();
+        const originalName = path.parse(file.originalname).name; 
+        const shortFileName = originalName.substring(0, 20); 
+        const finalFileName = `${shortFileName}-${uniqueId}${path.extname(file.originalname)}`;
+        cb(null, finalFileName);
     }
 });
 const upload = multer({
@@ -86,7 +92,7 @@ router.get('/getproductimage/:filename', (req, res) => {
     res.sendFile(imagePath);
 });
 // UPDATE 
-router.put('/updateproduct/:id', upload.single('product_image'), (req, res) => {
+router.put('/updateproduct/:id', upload.single('product_image'), async(req, res) => {
     const productId = req.params.id;
     const {
         product_name, description, brand, price, quantity, volume, fragrance_family,
@@ -94,6 +100,17 @@ router.put('/updateproduct/:id', upload.single('product_image'), (req, res) => {
     } = req.body;
 
     const product_image = req.file ? req.file.filename  : null; 
+
+    // try {
+    //     if (req.oldFileName) {
+    //         const oldFilePath = path.join('./uploads/products/', req.oldFileName);
+    //         await fs.unlink(oldFilePath);
+    //     }
+    // } catch (error) {
+    //     console.error(error);
+    //     res.status(500).send('Đã xảy ra lỗi khi xử lý ảnh.');
+    //     return; // Trả về ngay sau khi xử lý lỗi để ngăn cản tiếp tục thực hiện truy vấn cập nhật sản phẩm
+    // }
 
     const sql = `CALL UpdateProduct(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
@@ -156,6 +173,38 @@ router.get('/getproductsbycategory/:categoryName', (req, res) => {
         (err, results) => {
             if (err) {
                 console.error("Lỗi khi lấy thông tin sản phẩm theo danh mục:", err);
+                return res.status(500).json({ error: "Lỗi máy chủ" });
+            }
+            res.json(results[0]); 
+        }
+    );
+});
+// TIM SAN PHAM THEO THUONG HIEU
+router.get('/getproductsbybrand/:id', (req, res) => {
+    const id = req.params.id;
+
+    const sql = `CALL GetProductsByBrand(?)`;
+    connection.query(
+        sql, [id],
+        (err, results) => {
+            if (err) {
+                console.error("Lỗi khi lấy thông tin sản phẩm theo thuong hieu:", err);
+                return res.status(500).json({ error: "Lỗi máy chủ" });
+            }
+            res.json(results[0]); 
+        }
+    );
+});
+// TÌM KIẾM SẢN PHẨM THEO TÊN THƯƠNG HIỆU
+router.get('/SearchProductsByBrand/:brandname', (req, res) => {
+    const namebrand = req.params.brandname;
+
+    const sql = `CALL SearchProductsByBrand(?)`;
+    connection.query(
+        sql, [namebrand],
+        (err, results) => {
+            if (err) {
+                console.error("Lỗi khi lấy thông tin sản phẩm theo tên thương hiệu:", err);
                 return res.status(500).json({ error: "Lỗi máy chủ" });
             }
             res.json(results[0]); 
