@@ -3,6 +3,7 @@ let express = require('express');
 let router = express.Router();
 const request = require('request');
 const moment = require('moment');
+var connection = require('./dataconnect');
 
 router.get('/redirect-to-vnp', (req, res) => {
     const vnpUrl = req.query.vnpUrl;
@@ -31,14 +32,18 @@ router.post('/create_payment_url', function (req, res, next) {
         const orderId = moment(date).format('DDHHmmss');
         const amount = req.body.amount;
         const bankCode = req.body.bankCode;
+        // 
+        const customer_name = req.body.customer_name;
+        const customer_address = req.body.customer_address;
+        const customer_phone = req.body.customer_phone;
+        const customer_email = req.body.customer_email;
+        const products = req.body.products;
 
         let locale = req.body.language;
         if(locale === null || locale === ''){
             locale = 'vn';
         }
         const currCode = 'VND';
-        
-        
 
         let vnp_Params = {
             'vnp_Version': '2.1.0',
@@ -61,7 +66,6 @@ router.post('/create_payment_url', function (req, res, next) {
         }
 
         vnp_Params = sortObject(vnp_Params);
-
         
         const querystring = require('qs');
         const signData = querystring.stringify(vnp_Params, { encode: false });
@@ -73,9 +77,19 @@ router.post('/create_payment_url', function (req, res, next) {
         vnpUrl += '?' + querystring.stringify(vnp_Params, { encode: false });
 
         console.log("URL được tạo ra:", vnpUrl);
-        res.json({ vnpUrl: vnpUrl });
-});
 
+        const query = `CALL AddOrder('${customer_name}', '${customer_address}', '${customer_phone}', '${customer_email}', '${JSON.stringify(products)}')`;
+
+        connection.query(query, function(error, results, fields) {
+            if (error) {
+                console.error('Lỗi khi gọi procedure AddOrder:', error.message);
+                return res.status(500).json({ error: 'Lỗi khi thêm đơn hàng vào cơ sở dữ liệu' });
+            }
+            console.log('Procedure AddOrder đã được gọi thành công');
+
+            res.json({ vnpUrl: vnpUrl });
+        });
+});
 
 
 router.get('/vnpay_return', function (req, res, next) {

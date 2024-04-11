@@ -21,12 +21,16 @@ var jwt = require('./controller/middleware');
 var order = require('./controller/order');
 var customers = require('./controller/customer');
 var payment = require('./controller/vnpayment');
+var favorites = require('./controller/favorites');
+var about = require('./controller/aboutus');
+
+
 
 
 
 
 const corsOptions = {
-  origin: process.env.REACT_URL,
+  origin: 'http://localhost:4200',
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   Headers: 'X-Requested-With,content-type',
   credentials: true, 
@@ -86,6 +90,10 @@ app.use('/order', order);
 app.use('/customer', customers);
 app.use('/vnpayment', payment);
 app.use('/image', uploadImage);
+app.use('/favorites', favorites);
+app.use('/about', about);
+
+
 
 
 app.use(function (err, req, res, next) {

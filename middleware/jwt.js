@@ -14,7 +14,6 @@ const verifyToken = (req, res, next) => {
     if (err) {
       return res.status(403).json({ message: 'Token không hợp lệ.' });
     }
-
     next();
   });
 };
